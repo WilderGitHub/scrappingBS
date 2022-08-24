@@ -9,10 +9,11 @@ from requests import get
 import locale
 from datetime import datetime as dt
 
-proxies = {"http": "http://10.1.11.50:8080","https": "http://10.1.11.50:8080"}
+proxies = {"http": "http://10.1.11.50:8080",
+           "https": "http://10.1.11.50:8080"}
 
-desde=3600
-hasta=3600
+desde=3000
+hasta=3020
 pasito=1
 columnas=["codigo","fecha","titular","detalle","texto"]
 consolidado=pd.DataFrame()
@@ -45,29 +46,56 @@ for pagina in range(desde,hasta+1,pasito):
         r=r.content.decode('utf-8',errors='ignore')
         articulos = BeautifulSoup(r, 'lxml')#html5lib')
         elarticulo = articulos.find('div',id="lr-main")
+        
         #######  Encontramos el id
         
-        indice=elarticulo.find_next(id).find_next(id).find_next(id).find_next(id)
+        try:
+            #print("tryando")
+            indice=elarticulo.find_next(id).find_next(id).find_next(id).find_next(id)
+            ids.append(indice['id'])
+        except:
+            #print("exceptando")
+            indice=elarticulo.find_next(id)
+            #print("a ver",indice)
+            #ids.append(indice['id'])
+            ids.append("n.d.")
+            
+        else:
+            #print("elseando")
+            indice=elarticulo.find_next(id).find_next(id).find_next(id).find_next(id)
+            ids.append(indice['id'])
+        #indice=elarticulo.find_all("id",limit=4)
         #print("el id es: ",indice['id'])
-        ids.append(indice['id'])
+      #ids.append(indice['id'])
+      
         #######  Encontramos la fecha
-        
         
         locale.setlocale(locale.LC_TIME, '')
         try:
             fecha=elarticulo.find_all('span',limit=2)[1].text    
             mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
         except:
-            fecha=elarticulo.find_all('span',limit=2)[0].text    
-            mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
+            fecha=elarticulo.find_all('span',limit=1)[0].text  
+            print("fechita exce",fecha)
+            mifecha = "/ 17 de enero de 1977"
+           #mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
         else:#except ValueError:
             fecha=elarticulo.find_all('span',limit=2)[1].text    
+            print("fechita else",fecha)
             mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
                #print("La fecha es: ",mifecha)
         fechas.append(mifecha)
         #######  Encontramos el titular
-        titular=elarticulo.find_next("h1").text
-        titulares.append(titular)
+        try:
+            titular=elarticulo.find_next("h1").text
+            titulares.append(titular)
+        except:
+            titular=elarticulo.find_next("p",class_="special-art-title")
+            titulares.append(titular)
+        else:
+            titular=elarticulo.find_next("h1").text
+            titulares.append(titular)    
+                    
         #print("el titular es: ", titulares)
         
         #######  Encontramos el detalle
@@ -75,8 +103,19 @@ for pagina in range(desde,hasta+1,pasito):
         detalles.append(detalle)
         #print("el detalle es: ", detalles)
         #######  Encontramos el texto
-        divsparrafos = elarticulo.find_next('div',class_="article-body")
+        try:
+            print("try --- ")
+            divsparrafos = elarticulo.findNext('div',class_="article-body")
+        except:
+            print("esce ---- ")
+            divsparrafos = elarticulo.find_all('div',class_="article-body",limit=1)
+        else:
+            print("else --- ")
+            divsparrafos = elarticulo.findNext('div',class_="article-body")
+        #print("los divsparrafo seriya", divsparrafos)
+        print("tipo divis",type(divsparrafos))
         parrafos=divsparrafos.findChildren('p')
+        print("tipo",type(parrafos))
         parrafoses=[]
         for pp in parrafos:
             parrafoses.append(pp.string)
