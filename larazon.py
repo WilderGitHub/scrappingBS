@@ -12,8 +12,8 @@ from datetime import datetime as dt
 proxies = {"http": "http://10.1.11.50:8080",
            "https": "http://10.1.11.50:8080"}
 
-desde=3000
-hasta=3020
+desde=801
+hasta=900
 pasito=1
 columnas=["codigo","fecha","titular","detalle","texto"]
 consolidado=pd.DataFrame()
@@ -27,7 +27,10 @@ for pagina in range(desde,hasta+1,pasito):
     ### Encontramos el cuerpo principal de los articulos
     arts = soup.find('div',id='lr-main')
     # Encontramos los links de los articulos
-    links = arts.find_all('a',class_="link")
+    links = arts.find_all('a',class_="link",limit=5)
+    ''' for a in links:
+        print("el link seriya este: ",a['href'])
+     '''
     listalinks=[]
     for a in links:
         if 'href' in a.attrs:
@@ -46,9 +49,8 @@ for pagina in range(desde,hasta+1,pasito):
         r=r.content.decode('utf-8',errors='ignore')
         articulos = BeautifulSoup(r, 'lxml')#html5lib')
         elarticulo = articulos.find('div',id="lr-main")
-        
+        ##print("el articulo: ", type(elarticulo))
         #######  Encontramos el id
-        
         try:
             #print("tryando")
             indice=elarticulo.find_next(id).find_next(id).find_next(id).find_next(id)
@@ -76,25 +78,22 @@ for pagina in range(desde,hasta+1,pasito):
             mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
         except:
             fecha=elarticulo.find_all('span',limit=1)[0].text  
-            print("fechita exce",fecha)
             mifecha = "/ 17 de enero de 1977"
            #mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
         else:#except ValueError:
             fecha=elarticulo.find_all('span',limit=2)[1].text    
-            print("fechita else",fecha)
             mifecha = dt.strptime(fecha, ' / %d de %B de %Y')
                #print("La fecha es: ",mifecha)
         fechas.append(mifecha)
         #######  Encontramos el titular
         try:
             titular=elarticulo.find_next("h1").text
-            titulares.append(titular)
         except:
             titular=elarticulo.find_next("p",class_="special-art-title")
-            titulares.append(titular)
+            #titular=elarticulo.find_next("h1").text
         else:
             titular=elarticulo.find_next("h1").text
-            titulares.append(titular)    
+        titulares.append(titular)    
                     
         #print("el titular es: ", titulares)
         
@@ -104,18 +103,22 @@ for pagina in range(desde,hasta+1,pasito):
         #print("el detalle es: ", detalles)
         #######  Encontramos el texto
         try:
-            print("try --- ")
+            #print("trai")
             divsparrafos = elarticulo.findNext('div',class_="article-body")
+            parrafos=divsparrafos.findChildren('p')
         except:
-            print("esce ---- ")
+            #print("ezept")
             divsparrafos = elarticulo.find_all('div',class_="article-body",limit=1)
+            textos.append("no se consiguió el texto")
+            #parrafos=divsparrafos.findChildren('p')
         else:
-            print("else --- ")
+            #print("elsita")
             divsparrafos = elarticulo.findNext('div',class_="article-body")
+            parrafos=divsparrafos.findChildren('p')
+            #print("divsparrafitos tipo: ", type(divsparrafos))
         #print("los divsparrafo seriya", divsparrafos)
-        print("tipo divis",type(divsparrafos))
-        parrafos=divsparrafos.findChildren('p')
-        print("tipo",type(parrafos))
+            parrafos=divsparrafos.findChildren('p')
+        #print("parrafitos: ", parrafos)
         parrafoses=[]
         for pp in parrafos:
             parrafoses.append(pp.string)
@@ -127,4 +130,5 @@ for pagina in range(desde,hasta+1,pasito):
     consolidado= consolidado.append(troso, ignore_index=True)
 #print("consolidado: ", consolidado.head(20))
 #consolidado.to_excel("prueba.xlsx", encoding='utf8')    
-consolidado.to_csv("prueba.csv", encoding='utf8',sep="|")    
+consolidado.to_csv("prueba"+str(desde)+"-"+str(hasta)+".csv", encoding='utf8',sep="|")   
+print("Yasta terminado oe") 
