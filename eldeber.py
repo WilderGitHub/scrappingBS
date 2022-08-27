@@ -31,3 +31,19 @@ WebDriverWait(driver, 5)\
     .until(EC.element_to_be_clickable((By.XPATH,
                                       '/html/body/div[1]/div/main/div[4]/div/div[3]/div/section/div/div[2]/a')))\
     .click()
+
+
+def clickear():
+    # code
+    WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH,
+                                                               '/html/body/div/div/main/div[4]/div/div[3]/div/section/div/div[2]/a'))).click()
+
+
+for x in range(0, 5):
+    clickear()
+    time.sleep(4)
+texto_columnas = driver.find_element(By.XPATH,
+                                     '/html/body/div/div/main/div[4]/div/div[3]/div/section/div/div[1]')
+texto_columnas = texto_columnas.text
+#texto_columnas.find_element(By.CLASS_NAME, "content")
+print(texto_columnas)
